@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Statische Berechnung – Semesteraufgabe B3 Holzbau</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 10pt; color: #111; }
+  @page { size: A4 portrait; margin: 0; }
+  .page {
+    width: 210mm; height: 296mm;
+    padding: 13mm 16mm 12mm 18mm;
+    page-break-after: always;
+    position: relative;
+    overflow: hidden;
+    background: #fff;
+  }
+  .page:last-child { page-break-after: avoid; }
+  /* Kopfzeile */
+  .kopf {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-bottom: 1.2pt solid #111; padding-bottom: 1.5mm; margin-bottom: 5mm;
+    font-size: 8pt; color: #333;
+  }
+  .kopf .links b { font-size: 9pt; color:#111; }
+  .kopf .rechts { text-align: right; }
+  h1 { font-size: 15pt; margin: 4mm 0 3mm 0; }
+  h2 { font-size: 12pt; margin: 4mm 0 2.5mm 0; padding: 1.2mm 2mm; background: #e8e8e8; border-left: 3pt solid #555; }
+  h3 { font-size: 10.5pt; margin: 3.5mm 0 1.5mm 0; }
+  p { margin: 1.2mm 0; line-height: 1.45; text-align: justify; }
+  ul, ol { margin: 1mm 0 1.5mm 6mm; line-height: 1.45; }
+  li { margin-bottom: 0.6mm; }
+  table { border-collapse: collapse; width: 100%; margin: 2mm 0; font-size: 9pt; }
+  th, td { border: 0.5pt solid #444; padding: 1.1mm 1.8mm; text-align: left; vertical-align: top; }
+  th { background: #e8e8e8; font-weight: bold; }
+  td.r, th.r { text-align: right; }
+  td.c, th.c { text-align: center; }
+  .formel {
+    font-family: Georgia, "Times New Roman", serif; font-style: italic;
+    margin: 1.6mm 0 1.6mm 5mm; line-height: 1.55; font-size: 10pt;
+  }
+  .formel b { font-style: normal; }
+  .nw {
+    border: 1.2pt solid #b00020; padding: 1.6mm 3mm; margin: 2mm 0 2.5mm 5mm;
+    font-family: Georgia, serif; font-style: italic; display: inline-block; font-size: 10pt;
+    background: #fff5f5;
+  }
+  .ok { color: #0a7a2f; font-weight: bold; font-style: normal; }
+  .hinweis { background:#f0f4fa; border-left: 3pt solid #27588e; padding: 1.6mm 3mm; margin: 2mm 0; font-size: 9pt; }
+  .klein { font-size: 8pt; color: #444; }
+  sub, sup { font-size: 70%; }
+  .center { text-align: center; }
+  /* Deckblatt */
+  .deckblatt { display: flex; flex-direction: column; height: 100%; }
+  .db-kopf { display:flex; justify-content: space-between; border-bottom: 1pt solid #999; padding-bottom: 3mm; font-size: 9pt; }
+  .db-titel { text-align: center; margin-top: 38mm; }
+  .db-titel .t1 { font-size: 22pt; font-weight: bold; letter-spacing: 1.5pt; }
+  .db-titel .t2 { font-size: 13pt; margin-top: 5mm; }
+  .db-titel .t3 { font-size: 11pt; margin-top: 2mm; color: #333; }
+  .db-info { margin-top: 30mm; }
+  .db-info table { font-size: 10.5pt; }
+  .db-info td { border: none; border-bottom: 0.5pt solid #bbb; padding: 2.4mm 2mm; }
+  .db-info td:first-child { width: 42mm; font-weight: bold; border-bottom: none; }
+  .db-fuss { margin-top: auto; font-size: 9pt; color: #444; border-top: 0.5pt solid #999; padding-top: 2mm; }
+  /* Inhaltsverzeichnis */
+  .ivz td { border: none; padding: 1.1mm 1mm; }
+  .ivz .e1 td { font-weight: bold; padding-top: 2.4mm; }
+  .ivz .e2 td:first-child { padding-left: 7mm; }
+  .ivz td:last-child { text-align: right; width: 14mm; }
+  .punkte { border-bottom: 0.5pt dotted #888; }
+  svg text { font-family: Helvetica, Arial, sans-serif; font-style: normal; }
+  .svgbox { text-align: center; margin: 2mm 0; }
+  /* Plankopf */
+  .plankopf { border: 1pt solid #111; font-size: 7.5pt; margin-top: 2mm; }
+  .plankopf td { border: 0.5pt solid #111; padding: 0.9mm 1.5mm; vertical-align: top; height: 7mm;}
+  .plankopf .lbl { font-size: 6pt; color: #555; display: block; }
+  .pos-box { border: 1.5pt solid #111; background:#f2f2f2; padding: 1.5mm 3mm; margin-bottom: 3mm; font-weight: bold; font-size: 11pt;}
+</style>
+</head>
+<body>
+
+<!-- ============================ SEITE 1: DECKBLATT ============================ -->
+<div class="page">
+ <div class="deckblatt">
+  <div class="db-kopf">
+    <div><b>Technische Hochschule Nürnberg<br>Georg Simon Ohm</b><br>Fakultät Bauingenieurwesen</div>
+    <div style="text-align:right">Studiengang Bauingenieurwesen<br>Vorlesung Holzbau<br>Prof. Dr.-Ing. Jonas Schmidt</div>
+  </div>
+  <div class="db-titel">
+    <div class="t1">STATISCHE BERECHNUNG</div>
+    <div class="t2">Semesteraufgabe B3 – Holzbau</div>
+    <div class="t3">Konstruktion im Holzbau: Aufgabe 1 – Holzhaus<br>Unterzug mit Stützen (Stütze 1, Unterzug, Stütze 2)</div>
+  </div>
+  <div class="db-info">
+    <table>
+      <tr><td>Bauvorhaben:</td><td>Holzhaus – Deckentragwerk über Erdgeschoss</td></tr>
+      <tr><td>Gegenstand:</td><td>Bemessung Stütze 1, Unterzug und Stütze 2 nach DIN EN 1995-1-1 (EC 5) sowie zeichnerische Darstellung</td></tr>
+      <tr><td>Verfasser:</td><td>Felix &nbsp;________________________</td></tr>
+      <tr><td>Matrikel-Nr.:</td><td>________________________</td></tr>
+      <tr><td>Semester:</td><td>Wintersemester 2025/26</td></tr>
+      <tr><td>Abgabe:</td><td>Letzte Vorlesung vor Weihnachten 2025</td></tr>
+    </table>
+  </div>
+  <div class="db-fuss">
+    Die statische Berechnung umfasst 14 Seiten zzgl. Deckblatt und Inhaltsverzeichnis sowie 2 Zeichnungsblätter.<br>
+    Aufgestellt: Nürnberg, den ____________ &nbsp;&nbsp;&nbsp;&nbsp; Unterschrift: ____________________
+  </div>
+ </div>
+</div>
+
+<!-- ============================ SEITE 2: INHALT ============================ -->
+<div class="page">
+  <div class="kopf">
+    <div class="links"><b>Statische Berechnung</b> – Semesteraufgabe B3 Holzbau</div>
+    <div class="rechts">Inhaltsverzeichnis<br>Seite 2</div>
+  </div>
+  <h1>Inhaltsverzeichnis</h1>
+  <table class="ivz">
+    <tr class="e1"><td class="punkte">1&nbsp;&nbsp;Allgemeine Vorbemerkungen</td><td>3</td></tr>
+    <tr class="e2"><td class="punkte">1.1&nbsp;&nbsp;Aufgabenstellung und Tragwerksbeschreibung</td><td>3</td></tr>
+    <tr class="e2"><td class="punkte">1.2&nbsp;&nbsp;Statisches System</td><td>3</td></tr>
+    <tr class="e2"><td class="punkte">1.3&nbsp;&nbsp;Verwendete Normen und Unterlagen</td><td>3</td></tr>
+    <tr class="e2"><td class="punkte">1.4&nbsp;&nbsp;Baustoffe und Materialkennwerte</td><td>4</td></tr>
+    <tr class="e2"><td class="punkte">1.5&nbsp;&nbsp;Sicherheits- und Kombinationsbeiwerte</td><td>4</td></tr>
+    <tr class="e2"><td class="punkte">1.6&nbsp;&nbsp;Nutzungsklasse, Lasteinwirkungsdauer, Modifikationsbeiwerte</td><td>4</td></tr>
+    <tr class="e1"><td class="punkte">2&nbsp;&nbsp;Lastannahmen und Lastweiterleitung</td><td>5</td></tr>
+    <tr class="e2"><td class="punkte">2.1&nbsp;&nbsp;Deckenlasten und Einzugsbreite (Zweifeldträger)</td><td>5</td></tr>
+    <tr class="e2"><td class="punkte">2.2&nbsp;&nbsp;Lasten auf Stütze 1</td><td>5</td></tr>
+    <tr class="e1"><td class="punkte">3&nbsp;&nbsp;Pos. 1 – Stütze 1 (h = 4,00 m)</td><td>6</td></tr>
+    <tr class="e2"><td class="punkte">3.1&nbsp;&nbsp;System, Belastung und maßgebende Lastkombination</td><td>6</td></tr>
+    <tr class="e2"><td class="punkte">3.2&nbsp;&nbsp;Querschnittswahl</td><td>6</td></tr>
+    <tr class="e2"><td class="punkte">3.3&nbsp;&nbsp;Knicknachweis (GZT)</td><td>7</td></tr>
+    <tr class="e1"><td class="punkte">4&nbsp;&nbsp;Pos. 2 – Unterzug (ℓ = 6,50 m)</td><td>8</td></tr>
+    <tr class="e2"><td class="punkte">4.1&nbsp;&nbsp;System und Belastung</td><td>8</td></tr>
+    <tr class="e2"><td class="punkte">4.2&nbsp;&nbsp;Charakteristische Schnittgrößen</td><td>8</td></tr>
+    <tr class="e2"><td class="punkte">4.3&nbsp;&nbsp;Maßgebende Lastkombination und Querschnittswahl</td><td>9</td></tr>
+    <tr class="e2"><td class="punkte">4.4&nbsp;&nbsp;Biegenachweis (GZT)</td><td>9</td></tr>
+    <tr class="e2"><td class="punkte">4.5&nbsp;&nbsp;Schubnachweis (GZT)</td><td>10</td></tr>
+    <tr class="e2"><td class="punkte">4.6&nbsp;&nbsp;Kippnachweis (GZT)</td><td>10</td></tr>
+    <tr class="e2"><td class="punkte">4.7&nbsp;&nbsp;Auflagerpressung / Druck rechtwinklig zur Faser (GZT)</td><td>11</td></tr>
+    <tr class="e2"><td class="punkte">4.8&nbsp;&nbsp;Gebrauchstauglichkeitsnachweise (Durchbiegung)</td><td>12</td></tr>
+    <tr class="e1"><td class="punkte">5&nbsp;&nbsp;Pos. 3 – Stütze 2 (h = 2,60 m)</td><td>13</td></tr>
+    <tr class="e2"><td class="punkte">5.1&nbsp;&nbsp;System, Belastung und maßgebende Lastkombination</td><td>13</td></tr>
+    <tr class="e2"><td class="punkte">5.2&nbsp;&nbsp;Knicknachweis (GZT)</td><td>13</td></tr>
+    <tr class="e1"><td class="punkte">6&nbsp;&nbsp;Zusammenfassung, Bauteilliste und Hinweise</td><td>14</td></tr>
+    <tr class="e1"><td class="punkte">7&nbsp;&nbsp;Zeichnungen</td><td>15</td></tr>
+    <tr class="e2"><td class="punkte">Blatt 1 – Ansicht / Positionsplan, M 1:50</td><td>15</td></tr>
+    <tr class="e2"><td class="punkte">Blatt 2 – Details und Querschnitte, M 1:10 / 1:5</td><td>16</td></tr>
+  </table>
+  <div class="hinweis" style="margin-top:6mm">
+    <b>Hinweis zur Abgabe:</b> Die Zeichnungen (Blatt 1 und 2) sind gemäß Aufgabenstellung als <b>Handzeichnung mit
+    Plankopf</b> anzufertigen. Die hier beigefügten Blätter 15–16 dienen als maßstäbliche Vorlage dafür.
+  </div>
+</div>
+
+<!-- ============================ SEITE 3 ============================ -->
+<div class="page">
+  <div class="kopf">
+    <div class="links"><b>Statische Berechnung</b> – Semesteraufgabe B3 Holzbau</div>
+    <div class="rechts">Kap. 1 – Allgemeine Vorbemerkungen<br>Seite 3</div>
+  </div>
+  <h2>1&nbsp;&nbsp;Allgemeine Vorbemerkungen</h2>
+  <h3>1.1&nbsp;&nbsp;Aufgabenstellung und Tragwerksbeschreibung</h3>
+  <p>In einem Holzhaus ist ein Unterzug vorhanden, auf dem die Deckenbalken auflagern. Auf dem Unterzug steht mittig
+  eine Stütze (Stütze&nbsp;1), die Lasten aus dem darüberliegenden Tragwerk (Dach) abträgt. Der Unterzug liegt beidseitig
+  auf Holzstützen (Stützen&nbsp;2) auf. Zu bemessen sind die Stütze&nbsp;1, der Unterzug sowie die Stützen&nbsp;2;
+  die Situation ist zeichnerisch darzustellen.</p>
+  <p>Die Decke spannt als Durchlaufträger (Zweifeldträger) mit Stützweiten von jeweils 4,00&nbsp;m quer zum Unterzug;
+  der Unterzug bildet das Mittelauflager der Decke. Nicht angegebene Werte wurden sinnvoll gewählt und sind an der
+  jeweiligen Stelle gekennzeichnet (<i>„gewählt“</i>).</p>
+  <h3>1.2&nbsp;&nbsp;Statisches System</h3>
+  <div class="svgbox">
+  <svg width="150mm" height="78mm" viewBox="0 0 150 78">
+    <!-- Stuetze 1 -->
+    <line x1="75" y1="8" x2="75" y2="36" stroke="#111" stroke-width="0.9"/>
+    <circle cx="75" cy="36" r="1.1" fill="#fff" stroke="#111" stroke-width="0.5"/>
+    <circle cx="75" cy="8" r="1.1" fill="#fff" stroke="#111" stroke-width="0.5"/>
+    <!-- Lasten auf Stuetze 1 -->
+    <line x1="75" y1="0.5" x2="75" y2="6.5" stroke="#b00020" stroke-width="0.7"/>
+    <path d="M75 7.5 L74 5.2 L76 5.2 Z" fill="#b00020"/>
+    <text x="78" y="4.5" font-size="3.4" fill="#b00020">G = 10 kN; S = 13 kN; W = 2 kN</text>
+    <text x="77" y="24" font-size="3.4">Stütze 1, h = 4,00 m (Pendelstütze)</text>
+    <!-- Unterzug -->
+    <line x1="20" y1="36" x2="130" y2="36" stroke="#111" stroke-width="1.3"/>
+    <!-- Streckenlast -->
+    <line x1="20" y1="29" x2="130" y2="29" stroke="#27588e" stroke-width="0.5"/>
+    <g stroke="#27588e" stroke-width="0.45">
+      <line x1="20" y1="29" x2="20" y2="34.5"/><line x1="31" y1="29" x2="31" y2="34.5"/>
+      <line x1="42" y1="29" x2="42" y2="34.5"/><line x1="53" y1="29" x2="53" y2="34.5"/>
+      <line x1="64" y1="29" x2="64" y2="34.5"/><line x1="86" y1="29" x2="86" y2="34.5"/>
+      <line x1="97" y1="29" x2="97" y2="34.5"/><line x1="108" y1="29" x2="108" y2="34.5"/>
+      <line x1="119" y1="29" x2="119" y2="34.5"/><line x1="130" y1="29" x2="130" y2="34.5"/>
+    </g>
+    <text x="22" y="27" font-size="3.4" fill="#27588e">g, q aus Decke (Einzugsbreite 5,0 m) + Eigenlast Unterzug</text>
+    <text x="100" y="41" font-size="3.4">Unterzug, ℓ = 6,50 m</text>
+    <!-- Auflager = Stuetzen 2 -->
+    <line x1="20" y1="36" x2="20" y2="64" stroke="#111" stroke-width="0.9"/>
+    <line x1="130" y1="36" x2="130" y2="64" stroke="#111" stroke-width="0.9"/>
+    <circle cx="20" cy="36" r="1.1" fill="#fff" stroke="#111" stroke-width="0.5"/>
+    <circle cx="130" cy="36" r="1.1" fill="#fff" stroke="#111" stroke-width="0.5"/>
+    <text x="22" y="52" font-size="3.4">Stütze 2, h = 2,60 m</text>
+    <text x="104" y="52" font-size="3.4">Stütze 2, h = 2,60 m</text>
+    <!-- Fusspunkte gelenkig -->
+    <g stroke="#111" stroke-width="0.5" fill="#fff">
+      <circle cx="20" cy="64" r="1.1"/><circle cx="130" cy="64" r="1.1"/>
+      <path d="M20 65 L17 69 L23 69 Z"/><path d="M130 65 L127 69 L133 69 Z"/>
+      <line x1="15" y1="69" x2="25" y2="69"/><line x1="125" y1="69" x2="135" y2="69"/>
+    </g>
+    <g stroke="#111" stroke-width="0.35">
+      <line x1="16" y1="69" x2="14.5" y2="71"/><line x1="19" y1="69" x2="17.5" y2="71"/><line x1="22" y1="69" x2="20.5" y2="71"/><line x1="25" y1="69" x2="23.5" y2="71"/>
+      <line x1="126" y1="69" x2="124.5" y2="71"/><line x1="129" y1="69" x2="127.5" y2="71"/><line x1="132" y1="69" x2="130.5" y2="71"/><line x1="135" y1="69" x2="133.5" y2="71"/>
+    </g>
+    <!-- Massskette -->
+    <g stroke="#111" stroke-width="0.35">
+      <line x1="20" y1="72" x2="20" y2="76.5"/><line x1="75" y1="72" x2="75" y2="76.5"/><line x1="130" y1="72" x2="130" y2="76.5"/>
+      <line x1="20" y1="75" x2="130" y2="75"/>
+      <line x1="18.5" y1="76.5" x2="21.5" y2="73.5"/><line x1="73.5" y1="76.5" x2="76.5" y2="73.5"/><line x1="128.5" y1="76.5" x2="131.5" y2="73.5"/>
+    </g>
+    <text x="43" y="74" font-size="3.4">3,25</text><text x="99" y="74" font-size="3.4">3,25</text>
+  </svg>
+  </div>
+  <p>Beide Stützen werden als <b>Pendelstützen</b> (beidseitig gelenkig, Eulerfall&nbsp;2, β&nbsp;=&nbsp;1,0) angesetzt. Der
+  Unterzug ist ein <b>Einfeldträger</b> mit Gleichstreckenlast aus der Decke und mittiger Einzellast aus Stütze&nbsp;1.</p>
+  <h3>1.3&nbsp;&nbsp;Verwendete Normen und Unterlagen</h3>
+  <ul>
+    <li>DIN EN 1990 / NA – Grundlagen der Tragwerksplanung (Teilsicherheits- und Kombinationsbeiwerte)</li>
+    <li>DIN EN 1991-1-1 / NA – Einwirkungen auf Tragwerke</li>
+    <li>DIN EN 1995-1-1 / NA – Bemessung und Konstruktion von Holzbauten (Eurocode 5)</li>
+    <li>DIN EN 338 / DIN EN 14080 – Festigkeitsklassen Vollholz / Brettschichtholz</li>
+    <li>Aufgabenstellung „Semesteraufgabe B3“, Vorlesung Holzbau, Prof. Dr.-Ing. J. Schmidt, TH Nürnberg</li>
+    <li>Formelsammlung Holzbau (Vorlesungsunterlagen F6.1 Grundlagen Holzbau, TH Nürnberg)</li>
+    <li>DIN 68800 – Holzschutz</li>
+  </ul>
+</div>
+
+<!-- ============================ SEITE 4 ============================ -->
+<div class="page">
+  <div class="kopf">
+    <div class="links"><b>Statische Berechnung</b> – Semesteraufgabe B3 Holzbau</div>
+    <div class="rechts">Kap. 1 – Allgemeine Vorbemerkungen<br>Seite 4</div>
+  </div>
+  <h3>1.4&nbsp;&nbsp;Baustoffe und Materialkennwerte</h3>
+  <p>Gewählt werden Nadelvollholz (KVH) <b>C24</b> für die Stützen und Brettschichtholz <b>GL24h</b> für den Unterzug.
+  Charakteristische Kennwerte nach DIN EN 338 bzw. DIN EN 14080:</p>
+  <table>
+    <tr><th>Kennwert</th><th class="c">Symbol</th><th class="c">C24 (VH)</th><th class="c">GL24h (BSH)</th><th class="c">Einheit</th></tr>
+    <tr><td>Biegefestigkeit</td><td class="c">f<sub>m,k</sub></td><td class="c">24</td><td class="c">24</td><td class="c">N/mm²</td></tr>
+    <tr><td>Druckfestigkeit parallel zur Faser</td><td class="c">f<sub>c,0,k</sub></td><td class="c">21</td><td class="c">24</td><td class="c">N/mm²</td></tr>
+    <tr><td>Druckfestigkeit rechtwinklig zur Faser</td><td class="c">f<sub>c,90,k</sub></td><td class="c">2,5</td><td class="c">2,5</td><td class="c">N/mm²</td></tr>
+    <tr><td>Schubfestigkeit</td><td class="c">f<sub>v,k</sub></td><td class="c">4,0</td><td class="c">3,5</td><td class="c">N/mm²</td></tr>
+    <tr><td>Rissbeiwert</td><td class="c">k<sub>cr</sub></td><td class="c">0,5</td><td class="c">0,714</td><td class="c">–</td></tr>
+    <tr><td>Elastizitätsmodul (Mittelwert)</td><td class="c">E<sub>0,mean</sub></td><td class="c">11.000</td><td class="c">11.500</td><td class="c">N/mm²</td></tr>
+    <tr><td>Mittlere Rohdichte</td><td class="c">ρ<sub>mean</sub></td><td class="c">420</td><td class="c">420</td><td class="c">kg/m³</td></tr>
+  </table>
+  <p class="klein">Wichte für Eigenlastermittlung: γ ≈ 4,2 kN/m³ (aus ρ<sub>mean</sub>).</p>
+
+  <h3>1.5&nbsp;&nbsp;Sicherheits- und Kombinationsbeiwerte</h3>
+  <table>
+    <tr><th>Beiwert</th><th class="c">Symbol</th><th class="c">Wert</th></tr>
+    <tr><td>Teilsicherheitsbeiwert ständige Einwirkungen (ungünstig)</td><td class="c">γ<sub>G</sub></td><td class="c">1,35</td></tr>
+    <tr><td>Teilsicherheitsbeiwert veränderliche Einwirkungen</td><td class="c">γ<sub>Q</sub></td><td class="c">1,50</td></tr>
+    <tr><td>Teilsicherheitsbeiwert Material (Vollholz / Brettschichtholz)</td><td class="c">γ<sub>M</sub></td><td class="c">1,30</td></tr>
+  </table>
+  <table>
+    <tr><th>Veränderliche Einwirkung</th><th class="c">KLED</th><th class="c">ψ<sub>0</sub></th><th class="c">ψ<sub>2</sub></th></tr>
+    <tr><td>Nutzlast Kat. A (Wohn- und Aufenthaltsräume)</td><td class="c">mittel</td><td class="c">0,7</td><td class="c">0,3</td></tr>
+    <tr><td>Schneelast (Geländehöhe &lt; 1000 m ü. NN)</td><td class="c">kurz</td><td class="c">0,5</td><td class="c">0</td></tr>
+    <tr><td>Windlast</td><td class="c">kurz / sehr kurz</td><td class="c">0,6</td><td class="c">0</td></tr>
+  </table>
+
+  <h3>1.6&nbsp;&nbsp;Nutzungsklasse, Lasteinwirkungsdauer, Modifikationsbeiwerte</h3>
+  <p>Alle Bauteile liegen im beheizten Innenraum des Wohnhauses → <b>Nutzungsklasse NKL&nbsp;1</b>.
+  Modifikationsbeiwerte k<sub>mod</sub> für VH/BSH in NKL&nbsp;1 sowie Verformungsbeiwert:</p>
+  <table style="width:75%">
+    <tr><th>KLED</th><th class="c">ständig</th><th class="c">lang</th><th class="c">mittel</th><th class="c">kurz</th><th class="c">kurz/sehr kurz</th></tr>
+    <tr><td>k<sub>mod</sub> (NKL 1)</td><td class="c">0,60</td><td class="c">0,70</td><td class="c">0,80</td><td class="c">0,90</td><td class="c">1,00</td></tr>
+  </table>
+  <p>Verformungsbeiwert (Kriechen): <b>k<sub>def</sub> = 0,6</b> (VH/BSH, NKL&nbsp;1).</p>
+  <p>Bemessungswert der Baustoffeigenschaften: <span class="formel">f<sub>d</sub> = k<sub>mod</sub> / γ<sub>M</sub> · f<sub>k</sub></span>.
+  Bei mehreren veränderlichen Einwirkungen in einer Kombination gilt k<sub>mod</sub> der Einwirkung mit der kürzesten
+  Lasteinwirkungsdauer; maßgebend ist die Kombination mit dem größten Verhältnis <span class="formel">E<sub>d</sub> / k<sub>mod</sub></span>.</p>
+</div>
+
+<!-- ============================ SEITE 5 ============================ -->
+<div class="page">
+  <div class="kopf">
+    <div class="links"><b>Statische Berechnung</b> – Semesteraufgabe B3 Holzbau</div>
+    <div class="rechts">Kap. 2 – Lastannahmen<br>Seite 5</div>
+  </div>
+  <h2>2&nbsp;&nbsp;Lastannahmen und Lastweiterleitung</h2>
+  <h3>2.1&nbsp;&nbsp;Deckenlasten und Einzugsbreite (Zweifeldträger)</h3>
+  <p>Flächenlasten der Decke laut Aufgabenstellung:</p>
+  <table style="width:70%">
+    <tr><th>Einwirkung</th><th class="c">char. Wert</th><th class="c">Typ / KLED</th></tr>
+    <tr><td>Eigenlast Decke g<sub>k</sub></td><td class="c">2,50 kN/m²</td><td class="c">ständig</td></tr>
+    <tr><td>Verkehrslast (Nutzlast Kat. A) q<sub>k</sub></td><td class="c">2,00 kN/m²</td><td class="c">mittel</td></tr>
+  </table>
+  <p>Die Decke spannt als <b>Zweifeldträger</b> (Stützweiten 2 × 4,00 m) quer zum Unterzug; der Unterzug ist das
+  <b>Mittelauflager B</b>. Auflagerkräfte des Zweifeldträgers unter Gleichlast w:</p>
+  <div class="svgbox">
+  <svg width="120mm" height="34mm" viewBox="0 0 120 34">
+    <line x1="10" y1="14" x2="110" y2="14" stroke="#111" stroke-width="1.1"/>
+    <line x1="10" y1="8" x2="110" y2="8" stroke="#27588e" stroke-width="0.45"/>
+    <g stroke="#27588e" stroke-width="0.4">
+      <line x1="10" y1="8" x2="10" y2="12.8"/><line x1="20" y1="8" x2="20" y2="12.8"/><line x1="30" y1="8" x2="30" y2="12.8"/>
+      <line x1="40" y1="8" x2="40" y2="12.8"/><line x1="50" y1="8" x2="50" y2="12.8"/><line x1="60" y1="8" x2="60" y2="12.8"/>
+      <line x1="70" y1="8" x2="70" y2="12.8"/><line x1="80" y1="8" x2="80" y2="12.8"/><line x1="90" y1="8" x2="90" y2="12.8"/>
+      <line x1="100" y1="8" x2="100" y2="12.8"/><line x1="110" y1="8" x2="110" y2="12.8"/>
+    </g>
+    <text x="54" y="6" font-size="3.3" fill="#27588e">w</text>
+    <g stroke="#111" stroke-width="0.5" fill="#fff">
+      <path d="M10 14 L7.5 18.5 L12.5 18.5 Z"/><path d="M60 14 L57.5 18.5 L62.5 18.5 Z"/><path d="M110 14 L107.5 18.5 L112.5 18.5 Z"/>
+    </g>
+    <text x="7" y="23" font-size="3.3">A</text><text x="58.5" y="23" font-size="3.3">B = Unterzug</text><text x="108" y="23" font-size="3.3">C</text>
+    <text x="30" y="27.5" font-size="3.3">4,00 m</text><text x="82" y="27.5" font-size="3.3">4,00 m</text>
+    <text x="4" y="32" font-size="3.4">A = C = 0,375 · w · ℓ&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<tspan font-weight="bold">B = 1,25 · w · ℓ&nbsp; (maßgebend für den Unterzug)</tspan></text>
+  </svg>
+  </div>
+  <div class="formel">
+    Einzugsbreite des Unterzugs: &nbsp;<b>b<sub>E</sub></b> = 1,25 · 4,00 m = <b>5,00 m</b>
+  </div>
+  <p>Linienlasten auf den Unterzug aus der Decke (ungünstigste Laststellung: beide Felder belastet):</p>
+  <div class="formel">
+    g<sub>1,k</sub> = 2,50 kN/m² · 5,00 m = <b>12,50 kN/m</b> (ständig)<br>
+    q<sub>k</sub> &nbsp;= 2,00 kN/m² · 5,00 m = <b>10,00 kN/m</b> (Nutzlast Kat. A, mittel)
+  </div>
+  <p>Eigenlast Unterzug (gewählt GL24h b/h = 20/68 cm, vgl. Kap. 4.3):</p>
+  <div class="formel">
+    g<sub>2,k</sub> = 0,20 · 0,68 · 4,2 kN/m³ = 0,57 kN/m &nbsp;→&nbsp; gewählt <b>g<sub>2,k</sub> = 0,60 kN/m</b><br>
+    Σ g<sub>k</sub> = 12,50 + 0,60 = <b>13,10 kN/m</b>
+  </div>
+  <h3>2.2&nbsp;&nbsp;Lasten auf Stütze 1</h3>
+  <p>Vertikallasten aus dem darüberliegenden Tragwerk (Dach) laut Aufgabenstellung, zzgl. Eigenlast der Stütze
+  (12/12 cm, h = 4,00 m, vgl. Kap. 3.2):</p>
+  <table style="width:85%">
+    <tr><th>Einwirkung</th><th class="c">char. Wert</th><th class="c">KLED</th><th class="c">ψ<sub>0</sub></th><th class="c">ψ<sub>2</sub></th></tr>
+    <tr><td>Eigenlast G<sub>k</sub> = 10,0 kN + EG Stütze 0,12·0,12·4,0·4,2 ≈ 0,25 kN</td><td class="c"><b>10,25 kN</b></td><td class="c">ständig</td><td class="c">–</td><td class="c">–</td></tr>
+    <tr><td>Schneelast S<sub>k</sub> (Ort &lt; 1000 m ü. NN)</td><td class="c"><b>13,00 kN</b></td><td class="c">kurz</td><td class="c">0,5</td><td class="c">0</td></tr>
+    <tr><td>Windlast W<sub>k</sub> (Vertikalanteil)</td><td class="c"><b>2,00 kN</b></td><td class="c">kurz/sehr kurz</td><td class="c">0,6</td><td class="c">0</td></tr>
+  </table>
+  <p class="klein">Abhebende Windlasten (Sog) wirken entlastend und sind für die Bemessung der druckbeanspruchten
+  Bauteile nicht maßgebend; angesetzt wird die drückende Wirkung.</p>
+</div>
+
+<!-- ============================ SEITE 6 ============================ -->
+<div class="page">
+  <div class="kopf">
+    <div class="links"><b>Statische Berechnung</b> – Semesteraufgabe B3 Holzbau</div>
+    <div class="rechts">Pos. 1 – Stütze 1<br>Seite 6</div>
+  </div>
+  <div class="pos-box">Pos. 1 &nbsp;–&nbsp; Stütze 1 &nbsp;(h = 4,00 m, mittig auf dem Unterzug)</div>
+  <h3>3.1&nbsp;&nbsp;System, Belastung und maßgebende Lastkombination</h3>
+  <p>Pendelstütze, beidseitig gelenkig gelagert (Eulerfall 2): Knicklänge
+  <span class="formel">ℓ<sub>ef</sub> = β · ℓ = 1,0 · 4,00 m = 4,00 m</span> (für beide Achsen).
+  Zentrische Normalkraft aus G<sub>k</sub> = 10,25 kN, S<sub>k</sub> = 13,0 kN, W<sub>k</sub> = 2,0 kN.</p>
+  <p>Bemessungswert der Einwirkungen: <span class="formel">E<sub>d</sub> = γ<sub>G</sub>·G<sub>k</sub> + γ<sub>Q</sub>·Q<sub>k,1</sub> + Σ ψ<sub>0,i</sub>·γ<sub>Q</sub>·Q<sub>k,i</sub></span></p>
+  <table>
+    <tr><th>LF</th><th>Kombination</th><th class="r">E<sub>d</sub> = N<sub>d</sub> [kN]</th><th class="c">KLED</th><th class="c">k<sub>mod</sub></th><th class="r">E<sub>d</sub>/k<sub>mod</sub> [kN]</th></tr>
+    <tr><td>1</td><td>1,35 · 10,25</td><td class="r">13,84</td><td class="c">ständig</td><td class="c">0,60</td><td class="r">23,1</td></tr>
+    <tr style="background:#fdeeee"><td><b>2</b></td><td><b>1,35 · 10,25 + 1,5 · 13,0</b></td><td class="r"><b>33,34</b></td><td class="c"><b>kurz</b></td><td class="c"><b>0,90</b></td><td class="r"><b>37,0 ← maßg.</b></td></tr>
+    <tr><td>3</td><td>1,35 · 10,25 + 1,5 · 2,0</td><td class="r">16,84</td><td class="c">kurz/sehr kurz</td><td class="c">1,00</td><td class="r">16,8</td></tr>
+    <tr><td>4</td><td>1,35 · 10,25 + 1,5 · 13,0 + 1,5 · 0,6 · 2,0</td><td class="r">35,14</td><td class="c">kurz/sehr kurz</td><td class="c">1,00</td><td class="r">35,1</td></tr>
+    <tr><td>5</td><td>1,35 · 10,25 + 1,5 · 2,0 + 1,5 · 0,5 · 13,0</td><td class="r">26,59</td><td class="c">kurz/sehr kurz</td><td class="c">1,00</td><td class="r">26,6</td></tr>
+  </table>
+  <div class="formel">
+    Maßgebend: <b>LF 2 (G + S führend)</b>: &nbsp; N<sub>d</sub> = <b>33,34 kN</b>, &nbsp; k<sub>mod</sub> = 0,90
+  </div>
+  <h3>3.2&nbsp;&nbsp;Querschnittswahl</h3>
+  <p><b>Gewählt: KVH C24, b/h = 12/12 cm</b> (quadratischer Querschnitt, da Knicken um beide Achsen gleich möglich).</p>
+  <table style="width:70%">
+    <tr><th>Querschnittswert</th><th class="c">Wert</th></tr>
+    <tr><td>Querschnittsfläche A = 12 · 12</td><td class="c">144 cm²</td></tr>
+    <tr><td>Trägheitsradius i<sub>y</sub> = i<sub>z</sub> = 0,289 · 12 cm</td><td class="c">3,47 cm</td></tr>
+  </table>
+  <p>Bemessungswert der Druckfestigkeit:</p>
+  <div class="formel">
+    f<sub>c,0,d</sub> = k<sub>mod</sub>/γ<sub>M</sub> · f<sub>c,0,k</sub> = 0,90/1,30 · 21,0 = <b>14,54 N/mm²</b>
+  </div>
+</div>
+
+<!-- ============================ SEITE 7 ============================ -->
+<div class="page">
+  <div class="kopf">
+    <div class="links"><b>Statische Berechnung</b> – Semesteraufgabe B3 Holzbau</div>
+    <div class="rechts">Pos. 1 – Stütze 1<br>Seite 7</div>
+  </div>
+  <h3>3.3&nbsp;&nbsp;Knicknachweis (GZT)</h3>
+  <p><b>1. Knicklänge:</b></p>
+  <div class="formel">ℓ<sub>ef,y</sub> = ℓ<sub>ef,z</sub> = β · ℓ = 1,0 · 400 cm = <b>400 cm</b> &nbsp;(Eulerfall 2, Pendelstütze)</div>
+  <p><b>2. Schlankheitsgrad:</b></p>
+  <div class="formel">
+    λ<sub>y</sub> = λ<sub>z</sub> = ℓ<sub>ef</sub> / i = 400 / 3,47 = <b>115,3</b> &nbsp;&nbsp;(&lt; 150 &nbsp;✓)
+  </div>
+  <p><b>3. Knickbeiwert</b> (Tabelle „Beiwerte k<sub>c</sub> für den Knicknachweis“, C24, interpoliert zwischen λ = 115 → 0,234 und λ = 120 → 0,216):</p>
+  <div class="formel">k<sub>c</sub> = <b>0,233</b></div>
+  <p><b>4. Knickspannungsnachweis:</b></p>
+  <div class="formel">
+    σ<sub>c,0,d</sub> = N<sub>d</sub> / A = 33,34 kN / 144 cm² · 10 = <b>2,32 N/mm²</b>
+  </div>
+  <div class="nw">
+    σ<sub>c,0,d</sub> / (k<sub>c</sub> · f<sub>c,0,d</sub>) = 2,32 / (0,233 · 14,54) = 2,32 / 3,39 = <b>0,68 ≤ 1,0</b> &nbsp;<span class="ok">✓ Nachweis erfüllt</span>
+  </div>
+  <p class="klein">Kontrolle LF 4 (mit Wind, k<sub>mod</sub> = 1,0): σ<sub>c,0,d</sub> = 35,14/144·10 = 2,44 N/mm²;
+  f<sub>c,0,d</sub> = 16,15 N/mm² → η = 2,44/(0,233·16,15) = 0,65 &lt; 0,68 → LF 2 bleibt maßgebend.</p>
+  <p>Der reine Drucknachweis (ohne Knicken) ist mit η = 2,32/14,54 = 0,16 deutlich eingehalten; das
+  <b>Stabilitätsversagen (Knicken) ist bemessungsmaßgebend</b>.</p>
+  <div class="hinweis">
+    <b>Ergebnis Pos. 1:</b> Stütze 1 – <b>KVH C24, b/h = 12/12 cm</b>, Ausnutzung Knicknachweis η = 0,68.<br>
+    Anschlüsse Stützenkopf/-fuß gelenkig, Lagesicherung konstruktiv (z. B. Stahlwinkel bzw. eingeschlitztes Blech mit
+    Stabdübeln); Weiterleitung der Normalkraft über Kontaktpressung (Nachweis Querdruck auf Unterzug s. Kap. 4.7).
+  </div>
+</div>
+
+<!-- ============================ SEITE 8 ============================ -->
+<div class="page">
+  <div class="kopf">
+    <div class="links"><b>Statische Berechnung</b> – Semesteraufgabe B3 Holzbau</div>
+    <div class="rechts">Pos. 2 – Unterzug<br>Seite 8</div>
+  </div>
+  <div class="pos-box">Pos. 2 &nbsp;–&nbsp; Unterzug &nbsp;(ℓ = 6,50 m, Einfeldträger auf Stützen 2)</div>
+  <h3>4.1&nbsp;&nbsp;System und Belastung</h3>
+  <p>Einfeldträger, Stützweite ℓ = 6,50 m (Achsmaß der Stützen 2), gelenkig gelagert. Belastung:
+  Gleichstreckenlast aus Decke und Eigenlast sowie mittige Einzellasten aus Stütze 1 (vgl. Kap. 2):</p>
+  <table style="width:88%">
+    <tr><th>Einwirkung</th><th class="c">Wert</th><th class="c">KLED</th><th class="c">ψ<sub>0</sub> / ψ<sub>2</sub></th></tr>
+    <tr><td>Streckenlast ständig g<sub>k</sub> (Decke 12,50 + EG Unterzug 0,60)</td><td class="c">13,10 kN/m</td><td class="c">ständig</td><td class="c">–</td></tr>
+    <tr><td>Streckenlast Nutzlast q<sub>k</sub> (Kat. A)</td><td class="c">10,00 kN/m</td><td class="c">mittel</td><td class="c">0,7 / 0,3</td></tr>
+    <tr><td>Einzellast mittig G<sub>k</sub> (aus Stütze 1 inkl. EG)</td><td class="c">10,25 kN</td><td class="c">ständig</td><td class="c">–</td></tr>
+    <tr><td>Einzellast mittig S<sub>k</sub> (Schnee)</td><td class="c">13,00 kN</td><td class="c">kurz</td><td class="c">0,5 / 0</td></tr>
+    <tr><td>Einzellast mittig W<sub>k</sub> (Wind)</td><td class="c">2,00 kN</td><td class="c">kurz/sehr kurz</td><td class="c">0,6 / 0</td></tr>
+  </table>
+  <h3>4.2&nbsp;&nbsp;Charakteristische Schnittgrößen</h3>
+  <p>Feldmoment in Feldmitte (x = ℓ/2): <span class="formel">M = w·ℓ²/8</span> bzw. <span class="formel">M = P·ℓ/4</span>;
+  Querkraft/Auflagerkraft: <span class="formel">V = w·ℓ/2</span> bzw. <span class="formel">V = P/2</span>, mit ℓ²/8 = 5,281 m², ℓ/4 = 1,625 m:</p>
+  <table>
+    <tr><th>Einwirkung</th><th class="r">M<sub>k</sub> [kNm]</th><th class="r">V<sub>k</sub> = A<sub>k</sub> [kN]</th></tr>
+    <tr><td>ständig: 13,10 kN/m · 5,281 + 10,25 kN · 1,625 &nbsp;bzw.&nbsp; 13,10 · 3,25 + 10,25/2</td><td class="r">69,18 + 16,66 = <b>85,84</b></td><td class="r">42,58 + 5,13 = <b>47,70</b></td></tr>
+    <tr><td>Nutzlast: 10,00 kN/m</td><td class="r"><b>52,81</b></td><td class="r"><b>32,50</b></td></tr>
+    <tr><td>Schnee: 13,00 kN</td><td class="r"><b>21,13</b></td><td class="r"><b>6,50</b></td></tr>
+    <tr><td>Wind: 2,00 kN</td><td class="r"><b>3,25</b></td><td class="r"><b>1,00</b></td></tr>
+  </table>
+  <p class="klein">Maximales Moment der Streckenlasten und der Einzellast treten beide in Feldmitte auf und dürfen
+  direkt addiert werden. Die maximale Querkraft tritt am Auflager auf.</p>
+  <div class="svgbox">
+  <svg width="140mm" height="42mm" viewBox="0 0 140 42">
+    <line x1="15" y1="16" x2="125" y2="16" stroke="#111" stroke-width="1.2"/>
+    <g stroke="#27588e" stroke-width="0.4">
+      <line x1="15" y1="10" x2="125" y2="10" stroke-width="0.5"/>
+      <line x1="15" y1="10" x2="15" y2="14.8"/><line x1="26" y1="10" x2="26" y2="14.8"/><line x1="37" y1="10" x2="37" y2="14.8"/>
+      <line x1="48" y1="10" x2="48" y2="14.8"/><line x1="59" y1="10" x2="59" y2="14.8"/><line x1="81" y1="10" x2="81" y2="14.8"/>
+      <line x1="92" y1="10" x2="92" y2="14.8"/><line x1="103" y1="10" x2="103" y2="14.8"/><line x1="114" y1="10" x2="114" y2="14.8"/><line x1="125" y1="10" x2="125" y2="14.8"/>
+    </g>
+    <text x="17" y="8" font-size="3.2" fill="#27588e">g = 13,10 kN/m; q = 10,00 kN/m</text>
+    <line x1="70" y1="2" x2="70" y2="13.5" stroke="#b00020" stroke-width="0.8"/>
+    <path d="M70 15 L68.8 12.4 L71.2 12.4 Z" fill="#b00020"/>
+    <text x="72.5" y="5.5" font-size="3.2" fill="#b00020">G = 10,25 kN; S = 13,0 kN; W = 2,0 kN</text>
+    <g stroke="#111" stroke-width="0.5" fill="#fff">
+      <path d="M15 16 L12.5 20.5 L17.5 20.5 Z"/><path d="M125 16 L122.5 20.5 L127.5 20.5 Z"/>
+      <circle cx="125" cy="22.2" r="1.2" fill="none"/>
+    </g>
+    <g stroke="#111" stroke-width="0.35">
+      <line x1="15" y1="26" x2="15" y2="31"/><line x1="70" y1="26" x2="70" y2="31"/><line x1="125" y1="26" x2="125" y2="31"/>
+      <line x1="15" y1="29.5" x2="125" y2="29.5"/>
+      <line x1="13.5" y1="31" x2="16.5" y2="28"/><line x1="68.5" y1="31" x2="71.5" y2="28"/><line x1="123.5" y1="31" x2="126.5" y2="28"/>
+    </g>
+    <text x="39" y="28.3" font-size="3.3">3,25 m</text><text x="94" y="28.3" font-size="3.3">3,25 m</text>
+    <text x="11" y="37" font-size="3.3">A = Stütze 2</text><text x="113" y="37" font-size="3.3">B = Stütze 2</text>
+  </svg>
+  </div>
+</div>
+
+<!-- ============================ SEITE 9 ============================ -->
+<div class="page">
+  <div class="kopf">
+    <div class="links"><b>Statische Berechnung</b> – Semesteraufgabe B3 Holzbau</div>
+    <div class="rechts">Pos. 2 – Unterzug<br>Seite 9</div>
+  </div>
+  <h3>4.3&nbsp;&nbsp;Maßgebende Lastkombination und Querschnittswahl</h3>
+  <table>
+    <tr><th>LF</th><th>Kombination (Momente)</th><th class="r">M<sub>d</sub> [kNm]</th><th class="c">KLED</th><th class="c">k<sub>mod</sub></th><th class="r">M<sub>d</sub>/k<sub>mod</sub></th></tr>
+    <tr><td>1</td><td>1,35 · 85,84</td><td class="r">115,88</td><td class="c">ständig</td><td class="c">0,60</td><td class="r">193,1</td></tr>
+    <tr style="background:#fdeeee"><td><b>2</b></td><td><b>1,35 · 85,84 + 1,5 · 52,81</b></td><td class="r"><b>195,10</b></td><td class="c"><b>mittel</b></td><td class="c"><b>0,80</b></td><td class="r"><b>243,9 ← maßg.</b></td></tr>
+    <tr><td>3</td><td>LF 2 + 1,5 · 0,5 · 21,13</td><td class="r">210,95</td><td class="c">kurz</td><td class="c">0,90</td><td class="r">234,4</td></tr>
+    <tr><td>4</td><td>LF 3 + 1,5 · 0,6 · 3,25</td><td class="r">213,87</td><td class="c">kurz/sehr kurz</td><td class="c">1,00</td><td class="r">213,9</td></tr>
+    <tr><td>5</td><td>1,35 · 85,84 + 1,5 · 21,13 + 1,5 · 0,7 · 52,81</td><td class="r">203,03</td><td class="c">kurz</td><td class="c">0,90</td><td class="r">225,6</td></tr>
+  </table>
+  <div class="formel">
+    Maßgebend: <b>LF 2 (G + Nutzlast führend)</b>: &nbsp; M<sub>d</sub> = <b>195,10 kNm</b>; &nbsp;
+    V<sub>d</sub> = A<sub>d</sub> = 1,35 · 47,70 + 1,5 · 32,50 = <b>113,1 kN</b>; &nbsp; k<sub>mod</sub> = 0,80
+  </div>
+  <p class="klein">Die Querkraft-Kombinationen verhalten sich proportional zu den Momenten (gleiche Lastbilder),
+  daher ist auch für V<sub>d</sub> LF 2 maßgebend.</p>
+  <p><b>Vordimensionierung:</b> erf. W ≈ M<sub>d</sub>/f<sub>m,d</sub> = 195,10·10⁶ / 14,77 = 13.210 cm³ →
+  bei b = 20 cm: erf. h ≈ √(6·13.210/20) ≈ 63 cm.</p>
+  <p><b>Gewählt: BSH GL24h, b/h = 20/68 cm</b> (17 Lamellen à 40 mm).</p>
+  <table style="width:78%">
+    <tr><th>Querschnittswert</th><th class="c">Wert</th></tr>
+    <tr><td>A = 20 · 68</td><td class="c">1.360 cm²</td></tr>
+    <tr><td>W<sub>y</sub> = b·h²/6 = 20 · 68²/6</td><td class="c">15.413 cm³</td></tr>
+    <tr><td>I<sub>y</sub> = b·h³/12 = 20 · 68³/12</td><td class="c">524.053 cm⁴</td></tr>
+  </table>
+  <h3>4.4&nbsp;&nbsp;Biegenachweis (GZT)</h3>
+  <div class="formel">
+    f<sub>m,d</sub> = k<sub>mod</sub>/γ<sub>M</sub> · f<sub>m,k</sub> = 0,80/1,30 · 24,0 = <b>14,77 N/mm²</b><br>
+    k<sub>h</sub> = 1,0 &nbsp;(BSH: Erhöhung nur für h ≤ 600 mm; hier h = 680 mm)<br>
+    σ<sub>m,d</sub> = M<sub>d</sub> / W<sub>y</sub> = 195,10·10² kNcm / 15.413 cm³ · 10 = <b>12,66 N/mm²</b>
+  </div>
+  <div class="nw">
+    σ<sub>m,d</sub> / (k<sub>h</sub> · f<sub>m,d</sub>) = 12,66 / 14,77 = <b>0,86 ≤ 1,0</b> &nbsp;<span class="ok">✓ Nachweis erfüllt</span>
+  </div>
+</div>
+
+<!-- ============================ SEITE 10 ============================ -->
+<div class="page">
+  <div class="kopf">
+    <div class="links"><b>Statische Berechnung</b> – Semesteraufgabe B3 Holzbau</div>
+    <div class="rechts">Pos. 2 – Unterzug<br>Seite 10</div>
+  </div>
+  <h3>4.5&nbsp;&nbsp;Schubnachweis (GZT)</h3>
+  <p>Maximale Querkraft am Auflager: V<sub>d</sub> = 113,1 kN. Für den Rechteckquerschnitt gilt mit
+  wirksamer Breite b<sub>ef</sub> = k<sub>cr</sub> · b (Rissbeiwert BSH: k<sub>cr</sub> = 0,714):</p>
+  <div class="formel">
+    f<sub>v,d</sub> = k<sub>mod</sub>/γ<sub>M</sub> · f<sub>v,k</sub> = 0,80/1,30 · 3,5 = <b>2,15 N/mm²</b><br>
+    τ<sub>d</sub> = 1,5 · V<sub>d</sub> / (k<sub>cr</sub> · A) = 1,5 · 113,1 / (0,714 · 1.360 cm²) · 10 = <b>1,75 N/mm²</b>
+  </div>
+  <div class="nw">
+    τ<sub>d</sub> / f<sub>v,d</sub> = 1,75 / 2,15 = <b>0,81 ≤ 1,0</b> &nbsp;<span class="ok">✓ Nachweis erfüllt</span>
+  </div>
+
+  <h3>4.6&nbsp;&nbsp;Kippnachweis (GZT)</h3>
+  <p>Der Druckgurt (Trägeroberseite, Feldbereich) wird durch die dicht liegenden, aufgelagerten <b>Deckenbalken
+  (Achsabstand e = 62,5 cm)</b> kontinuierlich seitlich gehalten; die Deckenbalken sind am Unterzug zug- und
+  druckfest angeschlossen (Verbinder, s. Zeichnung). Damit gilt mit ℓ<sub>ef</sub> = e = 62,5 cm:</p>
+  <div class="formel">
+    ℓ<sub>ef</sub> · h / b² = 625 · 680 / 200² = <b>10,6 ≤ 100</b> &nbsp;→&nbsp; k<sub>crit</sub> = 1,0
+  </div>
+  <p>Selbst ohne Ansatz der seitlichen Halterung (Nachweis auf der sicheren Seite, Lastfall Gleichstreckenlast,
+  Belastung am Druckgurt):</p>
+  <div class="formel">
+    ℓ<sub>ef</sub> = 0,9 · ℓ + 2·h = 0,9 · 650 + 2 · 68 = 721 cm<br>
+    ℓ<sub>ef</sub> · h / b² = 7.210 · 680 / 200² = 122,6 &nbsp;→&nbsp; k<sub>crit</sub> = 1,0 &nbsp;(Tabelle GL24h: bis ℓ<sub>ef</sub>·h/b² = 160 → 1,0)<br>
+    h/b = 68/20 = 3,4 ≤ 4 &nbsp;✓
+  </div>
+  <div class="nw">
+    σ<sub>m,d</sub> / (k<sub>crit</sub> · k<sub>h</sub> · f<sub>m,d</sub>) = 12,66 / (1,0 · 1,0 · 14,77) = <b>0,86 ≤ 1,0</b> &nbsp;<span class="ok">✓ Kippen nicht maßgebend</span>
+  </div>
+  <p class="klein">Der gedrungene Querschnitt (h/b = 3,4) ist kippstabil; zusätzlich sichern die Deckenbalken und die
+  Gabellagerung an den Auflagern (Anschluss an Stützen 2) die Lagestabilität.</p>
+</div>
+
+<!-- ============================ SEITE 11 ============================ -->
+<div class="page">
+  <div class="kopf">
+    <div class="links"><b>Statische Berechnung</b> – Semesteraufgabe B3 Holzbau</div>
+    <div class="rechts">Pos. 2 – Unterzug<br>Seite 11</div>
+  </div>
+  <h3>4.7&nbsp;&nbsp;Auflagerpressung / Druck rechtwinklig zur Faser (GZT)</h3>
+  <p>Nachweisformat: <span class="formel">σ<sub>c,90,d</sub> = F<sub>d</sub> / A<sub>ef</sub> ≤ k<sub>c,90</sub> · f<sub>c,90,d</sub></span>
+  mit wirksamer Aufstandsfläche A<sub>ef</sub> (Verlängerung der Aufstandslänge um je 30 mm in Faserrichtung, sofern
+  der Träger entsprechend weiterläuft bzw. übersteht) und k<sub>c,90</sub> = 1,75 (BSH, Auflagerdruck).</p>
+
+  <h3 style="font-size:10pt">a) Lasteinleitung Stütze 1 → Unterzug (Feldmitte)</h3>
+  <div class="formel">
+    F<sub>d</sub> = 33,34 kN (LF 2 aus Pos. 1, k<sub>mod</sub> = 0,90)<br>
+    Aufstandsfläche: 12 × 12 cm (Stütze 1); Trägerbreite 20 cm &gt; 12 cm ✓<br>
+    A<sub>ef</sub> = (120 + 2 · 30) · 120 = 180 · 120 = <b>216 cm²</b> &nbsp;(Träger läuft beidseitig weiter)<br>
+    σ<sub>c,90,d</sub> = 33,34 / 216 · 10 = <b>1,54 N/mm²</b><br>
+    f<sub>c,90,d</sub> = 0,90/1,30 · 2,5 = 1,73 N/mm²
+  </div>
+  <div class="nw">
+    σ<sub>c,90,d</sub> / (k<sub>c,90</sub> · f<sub>c,90,d</sub>) = 1,54 / (1,75 · 1,73) = 1,54 / 3,03 = <b>0,51 ≤ 1,0</b> &nbsp;<span class="ok">✓</span>
+  </div>
+
+  <h3 style="font-size:10pt">b) Auflager Unterzug → Stütze 2 (Endauflager)</h3>
+  <div class="formel">
+    F<sub>d</sub> = A<sub>d</sub> = 113,1 kN (LF 2, k<sub>mod</sub> = 0,80)<br>
+    Aufstandsfläche: 20 × 20 cm (Stütze 2 = Trägerbreite) → Auflagerlänge ℓ<sub>A</sub> = 20 cm<br>
+    <b>Trägerüberstand ≥ 3 cm über Außenkante Stütze erforderlich</b> (gewählt: 5 cm, s. Zeichnung Detail A):<br>
+    A<sub>ef</sub> = (200 + 2 · 30) · 200 = 260 · 200 = <b>520 cm²</b><br>
+    σ<sub>c,90,d</sub> = 113,1 / 520 · 10 = <b>2,18 N/mm²</b><br>
+    f<sub>c,90,d</sub> = 0,80/1,30 · 2,5 = 1,54 N/mm²
+  </div>
+  <div class="nw">
+    σ<sub>c,90,d</sub> / (k<sub>c,90</sub> · f<sub>c,90,d</sub>) = 2,18 / (1,75 · 1,54) = 2,18 / 2,69 = <b>0,81 ≤ 1,0</b> &nbsp;<span class="ok">✓</span>
+  </div>
+  <div class="hinweis">
+    Die Auflagerpressung bestimmt die erforderliche Größe der Stütze 2 (volle Aufstandsfläche
+    <b>20 × 20 cm</b> und Trägerüberstand ≥ 3 cm sind einzuhalten → wichtige Information für den Architekten).
+  </div>
+</div>
+
+<!-- ============================ SEITE 12 ============================ -->
+<div class="page">
+  <div class="kopf">
+    <div class="links"><b>Statische Berechnung</b> – Semesteraufgabe B3 Holzbau</div>
+    <div class="rechts">Pos. 2 – Unterzug<br>Seite 12</div>
+  </div>
+  <h3>4.8&nbsp;&nbsp;Gebrauchstauglichkeitsnachweise (Durchbiegung)</h3>
+  <p>Elastische Durchbiegung in Feldmitte (E<sub>0,mean</sub> = 11.500 N/mm², I<sub>y</sub> = 524.053 cm⁴):</p>
+  <div class="formel">
+    Streckenlast: w = 5/384 · ℓ⁴/(E·I) · w<sub>k</sub> &nbsp;→&nbsp; k<sub>w,q</sub> = 5 · 6.500⁴ / (384 · 11.500 · 5,241·10⁹) = <b>0,386 mm/(kN/m)</b><br>
+    Einzellast: &nbsp;w = P·ℓ³/(48·E·I) &nbsp;→&nbsp; k<sub>w,P</sub> = 6.500³ / (48 · 11.500 · 5,241·10⁹) = <b>0,095 mm/kN</b>
+  </div>
+  <table>
+    <tr><th>Belastung</th><th class="r">q<sub>k</sub> bzw. P<sub>k</sub></th><th class="r">w<sub>inst</sub> [mm]</th><th class="c">ψ<sub>0</sub></th><th class="c">ψ<sub>2</sub></th></tr>
+    <tr><td>ständig (g = 13,10 kN/m; G = 10,25 kN)</td><td class="r">–</td><td class="r">5,05 + 0,97 = <b>6,02</b></td><td class="c">–</td><td class="c">–</td></tr>
+    <tr><td>Nutzlast q = 10,00 kN/m</td><td class="r">10,00</td><td class="r"><b>3,86</b></td><td class="c">0,7</td><td class="c">0,3</td></tr>
+    <tr><td>Schnee S = 13,00 kN</td><td class="r">13,00</td><td class="r"><b>1,23</b></td><td class="c">0,5</td><td class="c">0</td></tr>
+    <tr><td>Wind W = 2,00 kN</td><td class="r">2,00</td><td class="r"><b>0,19</b></td><td class="c">0,6</td><td class="c">0</td></tr>
+  </table>
+  <p><b>Nachweis 1a – elastische Anfangsdurchbiegung</b> (charakteristische Kombination, Nutzlast führend):</p>
+  <div class="formel">
+    Σw<sub>inst</sub> = 6,02 + 3,86 + 0,5 · 1,23 + 0,6 · 0,19 = <b>10,6 mm</b><br>
+    zul. w = ℓ/300 = 6.500/300 = 21,7 mm
+  </div>
+  <div class="nw">10,6 mm ≤ 21,7 mm &nbsp;(η = 0,49) &nbsp;<span class="ok">✓</span></div>
+  <p class="klein">Kontrolle Schnee führend: 6,02 + 1,23 + 0,7·3,86 + 0,6·0,19 = 10,1 mm &lt; 10,6 mm → Nutzlast führend maßgebend.</p>
+  <p><b>Kriechanteil</b> (quasi-ständige Kombination, k<sub>def</sub> = 0,6):</p>
+  <div class="formel">
+    Σw<sub>qs</sub> = 6,02 + 0,3 · 3,86 = 7,18 mm &nbsp;&nbsp;→&nbsp;&nbsp; w<sub>creep</sub> = k<sub>def</sub> · Σw<sub>qs</sub> = 0,6 · 7,18 = <b>4,31 mm</b>
+  </div>
+  <p><b>Nachweis 1b – Enddurchbiegung w<sub>fin</sub>:</b></p>
+  <div class="formel">Σw<sub>fin</sub> = Σw<sub>inst</sub> + w<sub>creep</sub> = 10,6 + 4,31 = <b>14,9 mm</b> ≤ ℓ/200 = 32,5 mm</div>
+  <div class="nw">14,9 mm ≤ 32,5 mm &nbsp;(η = 0,46) &nbsp;<span class="ok">✓</span></div>
+  <p><b>Nachweis 2 – Enddurchbiegung w<sub>net,fin</sub></b> (ohne Überhöhung, w<sub>c</sub> = 0):</p>
+  <div class="formel">w<sub>net,fin</sub> = Σw<sub>qs</sub> + w<sub>creep</sub> = 7,18 + 4,31 = <b>11,5 mm</b> ≤ ℓ/300 = 21,7 mm</div>
+  <div class="nw">11,5 mm ≤ 21,7 mm &nbsp;(η = 0,53) &nbsp;<span class="ok">✓</span></div>
+  <div class="hinweis"><b>Ergebnis Pos. 2:</b> Unterzug – <b>BSH GL24h, b/h = 20/68 cm</b>; maßgebend ist der
+  Biegenachweis mit η = 0,86. Eine Überhöhung ist nicht erforderlich.</div>
+</div>
+
+<!-- ============================ SEITE 13 ============================ -->
+<div class="page">
+  <div class="kopf">
+    <div class="links"><b>Statische Berechnung</b> – Semesteraufgabe B3 Holzbau</div>
+    <div class="rechts">Pos. 3 – Stütze 2<br>Seite 13</div>
+  </div>
+  <div class="pos-box">Pos. 3 &nbsp;–&nbsp; Stütze 2 &nbsp;(h = 2,60 m, beidseitig unter dem Unterzug)</div>
+  <h3>5.1&nbsp;&nbsp;System, Belastung und maßgebende Lastkombination</h3>
+  <p>Pendelstütze (Eulerfall 2), Knicklänge ℓ<sub>ef</sub> = 1,0 · 2,60 m = 2,60 m. Belastung aus der
+  Auflagerkraft des Unterzugs (Kap. 4.2) zzgl. Eigenlast der Stütze (20/20 cm):</p>
+  <div class="formel">
+    G<sub>k</sub> = 47,70 + 0,20 · 0,20 · 2,60 · 4,2 ≈ 47,70 + 0,44 = <b>48,14 kN</b>;&nbsp;
+    Q<sub>k</sub> = <b>32,50 kN</b>;&nbsp; S<sub>k</sub> = <b>6,50 kN</b>;&nbsp; W<sub>k</sub> = <b>1,00 kN</b>
+  </div>
+  <table>
+    <tr><th>LF</th><th>Kombination</th><th class="r">N<sub>d</sub> [kN]</th><th class="c">KLED</th><th class="c">k<sub>mod</sub></th><th class="r">N<sub>d</sub>/k<sub>mod</sub></th></tr>
+    <tr><td>1</td><td>1,35 · 48,14</td><td class="r">64,99</td><td class="c">ständig</td><td class="c">0,60</td><td class="r">108,3</td></tr>
+    <tr style="background:#fdeeee"><td><b>2</b></td><td><b>1,35 · 48,14 + 1,5 · 32,50</b></td><td class="r"><b>113,74</b></td><td class="c"><b>mittel</b></td><td class="c"><b>0,80</b></td><td class="r"><b>142,2 ← maßg.</b></td></tr>
+    <tr><td>3</td><td>LF 2 + 1,5 · 0,5 · 6,50</td><td class="r">118,61</td><td class="c">kurz</td><td class="c">0,90</td><td class="r">131,8</td></tr>
+    <tr><td>4</td><td>LF 3 + 1,5 · 0,6 · 1,00</td><td class="r">119,51</td><td class="c">kurz/sehr kurz</td><td class="c">1,00</td><td class="r">119,5</td></tr>
+    <tr><td>5</td><td>1,35 · 48,14 + 1,5 · 6,50 + 1,5 · 0,7 · 32,50</td><td class="r">108,86</td><td class="c">kurz</td><td class="c">0,90</td><td class="r">121,0</td></tr>
+  </table>
+  <div class="formel">Maßgebend: <b>LF 2</b>: &nbsp; N<sub>d</sub> = <b>113,74 kN</b>, &nbsp; k<sub>mod</sub> = 0,80</div>
+  <h3>5.2&nbsp;&nbsp;Knicknachweis (GZT)</h3>
+  <p><b>Gewählt: KVH C24, b/h = 20/20 cm.</b> Der Querschnitt wird durch die <b>Auflagerpressung des Unterzugs</b>
+  bestimmt (volle Aufstandsfläche 20 × 20 cm erforderlich, Nachweis s. Kap. 4.7 b).</p>
+  <div class="formel">
+    A = 400 cm²; &nbsp; i = 0,289 · 20 = 5,78 cm<br>
+    λ = ℓ<sub>ef</sub> / i = 260 / 5,78 = <b>45,0</b> &nbsp;→&nbsp; k<sub>c</sub> = <b>0,844</b> &nbsp;(Tabelle C24, λ = 45)<br>
+    f<sub>c,0,d</sub> = 0,80/1,30 · 21,0 = <b>12,92 N/mm²</b><br>
+    σ<sub>c,0,d</sub> = N<sub>d</sub> / A = 113,74 / 400 · 10 = <b>2,84 N/mm²</b>
+  </div>
+  <div class="nw">
+    σ<sub>c,0,d</sub> / (k<sub>c</sub> · f<sub>c,0,d</sub>) = 2,84 / (0,844 · 12,92) = 2,84 / 10,90 = <b>0,26 ≤ 1,0</b> &nbsp;<span class="ok">✓ Nachweis erfüllt</span>
+  </div>
+  <div class="hinweis"><b>Ergebnis Pos. 3:</b> Stütze 2 – <b>KVH C24, b/h = 20/20 cm</b>, Ausnutzung Knicken η = 0,26.
+  Maßgebend für die Querschnittsgröße ist die Kontaktpressung unter dem Unterzug (η = 0,81, Kap. 4.7 b).
+  Stützenfuß gelenkig, Lagesicherung konstruktiv (Stahlwinkel / Stützenfuß verzinkt); charakteristische
+  Fundamentlasten je Stütze: G = 48,1 kN, Q = 32,5 kN, S = 6,5 kN, W = 1,0 kN.</div>
+</div>
+
+<!-- ============================ SEITE 14 ============================ -->
+<div class="page">
+  <div class="kopf">
+    <div class="links"><b>Statische Berechnung</b> – Semesteraufgabe B3 Holzbau</div>
+    <div class="rechts">Kap. 6 – Zusammenfassung<br>Seite 14</div>
+  </div>
+  <h2>6&nbsp;&nbsp;Zusammenfassung, Bauteilliste und Hinweise</h2>
+  <h3>6.1&nbsp;&nbsp;Bauteilliste</h3>
+  <table>
+    <tr><th>Pos.</th><th>Bauteil</th><th class="c">Material</th><th class="c">Querschnitt b/h</th><th class="c">Länge</th><th class="c">maßg. Nachweis</th><th class="c">η</th></tr>
+    <tr><td>1</td><td>Stütze 1</td><td class="c">KVH C24</td><td class="c">12/12 cm</td><td class="c">4,00 m</td><td class="c">Knicken</td><td class="c">0,68</td></tr>
+    <tr><td>2</td><td>Unterzug</td><td class="c">BSH GL24h</td><td class="c">20/68 cm</td><td class="c">6,60 m¹⁾</td><td class="c">Biegung</td><td class="c">0,86</td></tr>
+    <tr><td>3</td><td>Stütze 2 (2 Stück)</td><td class="c">KVH C24</td><td class="c">20/20 cm</td><td class="c">2,60 m</td><td class="c">Auflagerpressung²⁾</td><td class="c">0,81</td></tr>
+  </table>
+  <p class="klein">¹⁾ Stützweite 6,50 m (Achsmaß) + 2 × 5 cm Überstand. &nbsp; ²⁾ Querdruck im Unterzug über der Stütze (Kap. 4.7 b); Knicknachweis der Stütze selbst: η = 0,26.</p>
+  <h3>6.2&nbsp;&nbsp;Wichtige Informationen für den Architekten</h3>
+  <ul>
+    <li><b>Konstruktionshöhe:</b> OK Fußboden bis UK Unterzug = 2,60 m; Unterzughöhe 0,68 m → OK Unterzug bei 3,28 m. Die lichte Durchgangshöhe unter dem Unterzug beträgt 2,60 m.</li>
+    <li><b>Auflager:</b> Volle Aufstandsfläche des Unterzugs auf Stütze 2 (20 × 20 cm) erforderlich; <b>Trägerüberstand ≥ 3 cm</b> (gewählt 5 cm) über Außenkante Stütze beidseitig.</li>
+    <li><b>Aussteifung:</b> Die Deckenbalken (e = 62,5 cm) sind am Unterzug zug-/druckfest anzuschließen (Kippsicherung); an den Auflagern Gabellagerung durch Anschluss an die Stützen 2.</li>
+    <li><b>Verbindungen:</b> Alle Anschlüsse gelenkig und konstruktiv auszuführen (z. B. verzinkte Stahlwinkel/Balkenschuhe bzw. eingeschlitzte Bleche mit Stabdübeln); Lagesicherung gegen Verschieben und Abheben.</li>
+    <li><b>Lastweiterleitung:</b> Charakteristische Lasten je Stütze 2 in das Fundament: G = 48,1 kN; Q = 32,5 kN; S = 6,5 kN; W = 1,0 kN (Bemessungswert N<sub>d</sub> ≈ 114 kN).</li>
+    <li><b>Holzschutz:</b> Nutzungsklasse 1 (beheizter Innenraum), Gebrauchsklasse GK 0 nach DIN 68800 → kein chemischer Holzschutz erforderlich; Holzfeuchte beim Einbau ≤ 15 ± 3 %.</li>
+    <li><b>Material/Sichtqualität:</b> KVH und BSH in Sichtqualität möglich (Abstimmung mit Bauherr); GL24h alternativ als GL24c möglich (Biegenachweis identisch, f<sub>m,k</sub> = 24 N/mm²).</li>
+  </ul>
+  <h3>6.3&nbsp;&nbsp;Zusammenfassung der Nachweise</h3>
+  <table>
+    <tr><th>Nachweis</th><th class="c">Pos. 1 Stütze 1</th><th class="c">Pos. 2 Unterzug</th><th class="c">Pos. 3 Stütze 2</th></tr>
+    <tr><td>Knicken (GZT)</td><td class="c"><b>0,68 ✓</b></td><td class="c">–</td><td class="c">0,26 ✓</td></tr>
+    <tr><td>Biegung (GZT)</td><td class="c">–</td><td class="c"><b>0,86 ✓</b></td><td class="c">–</td></tr>
+    <tr><td>Schub (GZT)</td><td class="c">–</td><td class="c">0,81 ✓</td><td class="c">–</td></tr>
+    <tr><td>Kippen (GZT)</td><td class="c">–</td><td class="c">0,86 ✓ (k<sub>crit</sub> = 1,0)</td><td class="c">–</td></tr>
+    <tr><td>Querdruck / Auflagerpressung (GZT)</td><td class="c">0,51 ✓ (auf Unterzug)</td><td class="c">0,81 ✓ (auf Stütze 2)</td><td class="c">(0,81) ✓</td></tr>
+    <tr><td>Durchbiegung w<sub>inst</sub> ≤ ℓ/300 (GZG)</td><td class="c">–</td><td class="c">0,49 ✓</td><td class="c">–</td></tr>
+    <tr><td>Durchbiegung w<sub>fin</sub> ≤ ℓ/200 (GZG)</td><td class="c">–</td><td class="c">0,46 ✓</td><td class="c">–</td></tr>
+    <tr><td>Durchbiegung w<sub>net,fin</sub> ≤ ℓ/300 (GZG)</td><td class="c">–</td><td class="c">0,53 ✓</td><td class="c">–</td></tr>
+  </table>
+  <p><b>Alle Nachweise im Grenzzustand der Tragfähigkeit und der Gebrauchstauglichkeit sind erfüllt.</b></p>
+</div>
+
+<!-- ============================ SEITE 15: ZEICHNUNG BLATT 1 ============================ -->
+<div class="page">
+  <div class="kopf">
+    <div class="links"><b>Statische Berechnung</b> – Semesteraufgabe B3 Holzbau</div>
+    <div class="rechts">Zeichnung Blatt 1 (Vorlage für Handzeichnung)<br>Seite 15</div>
+  </div>
+  <div class="svgbox">
+  <svg width="172mm" height="206mm" viewBox="0 0 172 206">
+    <defs>
+      <pattern id="holz1" width="3" height="3" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+        <line x1="0" y1="0" x2="0" y2="3" stroke="#999" stroke-width="0.3"/>
+      </pattern>
+    </defs>
+    <text x="2" y="5" font-size="4.6" font-weight="bold">Ansicht Tragsystem – M 1:50</text>
+    <!-- Koordinaten: x_p = 14 + (x_real+0.05)*20 ; y_p = 14 + (7.28 - y_real)*20 ; Boden y=159.6 -->
+    <!-- Decke-Band links:  x 0..3.29 -> 15..80.8 ; y 3.28..3.52 -> 89.0..84.2 -->
+    <g fill="none" stroke="#777" stroke-width="0.4" stroke-dasharray="2,1.2">
+      <rect x="13" y="84.2" width="67.8" height="4.8"/>
+      <rect x="83.2" y="84.2" width="67.8" height="4.8"/>
+    </g>
+    <text x="16" y="78.0" font-size="3.1" fill="#555">Deckenbalken e = 62,5 cm, quer spannend (ℓ = 2 × 4,00 m)</text>
+    <text x="16" y="82.2" font-size="3.1" fill="#555">Anschluss an Unterzug zug-/druckfest (Kippsicherung)</text>
+    <!-- Unterzug: x -0.05..6.75 -> 14..150 ; y 2.6..3.28 -> 102.6..89.0 -->
+    <rect x="14" y="89.0" width="136" height="13.6" fill="url(#holz1)" stroke="#111" stroke-width="0.7"/>
+    <!-- Stuetze 1: x 3.29..3.41 -> 80.8..83.2 ; y 3.28..7.28 -> 89.0..9.0 -->
+    <rect x="80.8" y="9.0" width="2.4" height="80.0" fill="url(#holz1)" stroke="#111" stroke-width="0.7"/>
+    <!-- Stuetzen 2: links x 0..0.2 -> 15..19 ; y 0..2.6 -> 159.6..102.6  | rechts x 6.5..6.7 -> 145..149 -->
+    <rect x="15" y="102.6" width="4" height="57.0" fill="url(#holz1)" stroke="#111" stroke-width="0.7"/>
+    <rect x="145" y="102.6" width="4" height="57.0" fill="url(#holz1)" stroke="#111" stroke-width="0.7"/>
+    <!-- Boden -->
+    <line x1="4" y1="159.6" x2="166" y2="159.6" stroke="#111" stroke-width="0.9"/>
+    <g stroke="#111" stroke-width="0.3">
+      <line x1="6" y1="159.6" x2="3.5" y2="162.5"/><line x1="12" y1="159.6" x2="9.5" y2="162.5"/><line x1="18" y1="159.6" x2="15.5" y2="162.5"/>
+      <line x1="24" y1="159.6" x2="21.5" y2="162.5"/><line x1="30" y1="159.6" x2="27.5" y2="162.5"/><line x1="36" y1="159.6" x2="33.5" y2="162.5"/>
+      <line x1="42" y1="159.6" x2="39.5" y2="162.5"/><line x1="48" y1="159.6" x2="45.5" y2="162.5"/><line x1="54" y1="159.6" x2="51.5" y2="162.5"/>
+      <line x1="60" y1="159.6" x2="57.5" y2="162.5"/><line x1="66" y1="159.6" x2="63.5" y2="162.5"/><line x1="72" y1="159.6" x2="69.5" y2="162.5"/>
+      <line x1="78" y1="159.6" x2="75.5" y2="162.5"/><line x1="84" y1="159.6" x2="81.5" y2="162.5"/><line x1="90" y1="159.6" x2="87.5" y2="162.5"/>
+      <line x1="96" y1="159.6" x2="93.5" y2="162.5"/><line x1="102" y1="159.6" x2="99.5" y2="162.5"/><line x1="108" y1="159.6" x2="105.5" y2="162.5"/>
+      <line x1="114" y1="159.6" x2="111.5" y2="162.5"/><line x1="120" y1="159.6" x2="117.5" y2="162.5"/><line x1="126" y1="159.6" x2="123.5" y2="162.5"/>
+      <line x1="132" y1="159.6" x2="129.5" y2="162.5"/><line x1="138" y1="159.6" x2="135.5" y2="162.5"/><line x1="144" y1="159.6" x2="141.5" y2="162.5"/>
+      <line x1="150" y1="159.6" x2="147.5" y2="162.5"/><line x1="156" y1="159.6" x2="153.5" y2="162.5"/><line x1="162" y1="159.6" x2="159.5" y2="162.5"/>
+    </g>
+    <text x="4" y="166.5" font-size="3.1" fill="#555">OK Fertigfußboden ±0,00 (Auflagerung der Stützen 2 auf Fundament/Schwelle, Lagesicherung mit Stahlwinkel)</text>
+    <!-- Bauteil-Labels -->
+    <text x="88" y="30" font-size="3.6" font-weight="bold">Stütze 1</text>
+    <text x="88" y="34.6" font-size="3.3">KVH C24, 12/12 cm, h = 4,00 m</text>
+    <line x1="86.8" y1="29" x2="83.2" y2="29" stroke="#111" stroke-width="0.3"/>
+    <text x="100" y="95.0" font-size="3.6" font-weight="bold">Unterzug</text>
+    <text x="100" y="99.6" font-size="3.3">BSH GL24h, b/h = 20/68 cm</text>
+    <text x="22" y="126" font-size="3.6" font-weight="bold">Stütze 2</text>
+    <text x="22" y="130.6" font-size="3.3">KVH C24, 20/20 cm</text>
+    <text x="22" y="135.2" font-size="3.3">h = 2,60 m</text>
+    <line x1="21" y1="125" x2="19" y2="125" stroke="#111" stroke-width="0.3"/>
+    <text x="118" y="126" font-size="3.6" font-weight="bold">Stütze 2</text>
+    <text x="118" y="130.6" font-size="3.3">KVH C24, 20/20 cm</text>
+    <text x="118" y="135.2" font-size="3.3">h = 2,60 m</text>
+    <line x1="144" y1="125" x2="145" y2="125" stroke="#111" stroke-width="0.3"/>
+    <!-- Detail-Kreise -->
+    <circle cx="147" cy="98" r="7.5" fill="none" stroke="#b00020" stroke-width="0.5" stroke-dasharray="2,1.2"/>
+    <line x1="142" y1="103.5" x2="137.5" y2="108.5" stroke="#b00020" stroke-width="0.35"/>
+    <text x="117" y="111.5" font-size="3.4" fill="#b00020" font-weight="bold">A (Blatt 2)</text>
+    <circle cx="82" cy="91" r="7.5" fill="none" stroke="#b00020" stroke-width="0.5" stroke-dasharray="2,1.2"/>
+    <line x1="89.5" y1="86.5" x2="106.5" y2="81.5" stroke="#b00020" stroke-width="0.35"/>
+    <text x="108" y="82.5" font-size="3.4" fill="#b00020" font-weight="bold">B (Blatt 2)</text>
+    <!-- Massketten horizontal: Achsen bei x 17 (0.1) und 147 (6.6), Mitte 82 -->
+    <g stroke="#111" stroke-width="0.3">
+      <line x1="17" y1="163" x2="17" y2="177"/><line x1="82" y1="170" x2="82" y2="177"/><line x1="147" y1="163" x2="147" y2="177"/>
+      <line x1="17" y1="175" x2="147" y2="175"/>
+      <line x1="15.8" y1="176.2" x2="18.2" y2="173.8"/><line x1="80.8" y1="176.2" x2="83.2" y2="173.8"/><line x1="145.8" y1="176.2" x2="148.2" y2="173.8"/>
+    </g>
+    <text x="45" y="173.6" font-size="3.4">3,25</text><text x="112" y="173.6" font-size="3.4">3,25</text>
+    <text x="66" y="179.3" font-size="3.4">Achsmaß 6,50 m</text>
+    <g stroke="#111" stroke-width="0.3"><line x1="17" y1="180.5" x2="147" y2="180.5" marker-start="none"/><line x1="17" y1="178" x2="17" y2="183"/><line x1="147" y1="178" x2="147" y2="183"/>
+      <line x1="15.8" y1="181.7" x2="18.2" y2="179.3"/><line x1="145.8" y1="181.7" x2="148.2" y2="179.3"/></g>
+    <!-- Massketten vertikal rechts: y 9.0 / 89.0 / 102.6 / 159.6 -->
+    <g stroke="#111" stroke-width="0.3">
+      <line x1="152" y1="9" x2="162" y2="9"/><line x1="152" y1="89" x2="162" y2="89"/><line x1="151" y1="102.6" x2="162" y2="102.6"/><line x1="152" y1="159.6" x2="162" y2="159.6"/>
+      <line x1="160" y1="9" x2="160" y2="159.6"/>
+      <line x1="158.8" y1="10.2" x2="161.2" y2="7.8"/><line x1="158.8" y1="90.2" x2="161.2" y2="87.8"/><line x1="158.8" y1="103.8" x2="161.2" y2="101.4"/><line x1="158.8" y1="160.8" x2="161.2" y2="158.4"/>
+    </g>
+    <text x="162.5" y="50" font-size="3.4" transform="rotate(90 162.5 50)">4,00</text>
+    <text x="162.5" y="93.5" font-size="3.4" transform="rotate(90 162.5 93.5)">0,68</text>
+    <text x="162.5" y="128" font-size="3.4" transform="rotate(90 162.5 128)">2,60</text>
+    <!-- Hinweisblock -->
+    <text x="2" y="190" font-size="3.2" font-weight="bold">Hinweise:</text>
+    <text x="2" y="194.4" font-size="3.1">– Nutzungsklasse NKL 1; Holzschutz: GK 0 nach DIN 68800, kein chemischer Holzschutz erforderlich.</text>
+    <text x="2" y="198.4" font-size="3.1">– Unterzug-Überstand ≥ 3 cm (gew. 5 cm) über Außenkante Stütze 2; volle Auflagerfläche 20 × 20 cm erforderlich.</text>
+    <text x="2" y="202.4" font-size="3.1">– Alle Anschlüsse gelenkig, Lagesicherung mit verzinkten Stahlwinkeln; Maße in m, Querschnitte b/h in cm.</text>
+  </svg>
+  </div>
+  <table class="plankopf">
+    <tr>
+      <td style="width:34mm"><span class="lbl">Tragwerksplaner</span><b>Semesteraufgabe B3</b><br>TH Nürnberg – Holzbau</td>
+      <td style="width:46mm"><span class="lbl">Bauvorhaben</span>Holzhaus – Unterzug mit Stützen</td>
+      <td style="width:40mm"><span class="lbl">Gegenstand</span>Ansicht Tragsystem (Positionsplan)</td>
+      <td style="width:18mm"><span class="lbl">Maßstab</span>1:50</td>
+      <td style="width:18mm"><span class="lbl">Datum</span>&nbsp;</td>
+      <td style="width:16mm"><span class="lbl">Blatt</span><b>1</b></td>
+    </tr>
+    <tr>
+      <td><span class="lbl">Bearbeitet</span>Felix ____________</td>
+      <td><span class="lbl">Bauherr</span>–</td>
+      <td><span class="lbl">Index / Änderung</span>–</td>
+      <td colspan="3"><span class="lbl">Projekt-Nr.</span>B3 – WS 2025/26</td>
+    </tr>
+  </table>
+</div>
+
+<!-- ============================ SEITE 16: ZEICHNUNG BLATT 2 ============================ -->
+<div class="page">
+  <div class="kopf">
+    <div class="links"><b>Statische Berechnung</b> – Semesteraufgabe B3 Holzbau</div>
+    <div class="rechts">Zeichnung Blatt 2 (Vorlage für Handzeichnung)<br>Seite 16</div>
+  </div>
+  <div class="svgbox">
+  <svg width="172mm" height="230mm" viewBox="0 0 172 230">
+    <defs>
+      <pattern id="holz2" width="3" height="3" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+        <line x1="0" y1="0" x2="0" y2="3" stroke="#999" stroke-width="0.3"/>
+      </pattern>
+      <pattern id="holz3" width="2.2" height="2.2" patternTransform="rotate(-45)" patternUnits="userSpaceOnUse">
+        <line x1="0" y1="0" x2="0" y2="2.2" stroke="#777" stroke-width="0.28"/>
+      </pattern>
+    </defs>
+    <!-- ======== Detail A: Auflager Unterzug auf Stuetze 2 ======== -->
+    <text x="2" y="5" font-size="4.2" font-weight="bold">Detail A – M 1:10</text>
+    <text x="2" y="10" font-size="3.2">Auflager Unterzug auf Stütze 2</text>
+    <!-- Traeger: x 10..58, y 16..84 (Schnittkante rechts); Stuetze x 15..35, y 84..119 -->
+    <rect x="10" y="16" width="48" height="68" fill="url(#holz2)" stroke="#111" stroke-width="0.6"/>
+    <line x1="58" y1="16" x2="58" y2="84" stroke="#fff" stroke-width="0.8"/>
+    <line x1="58" y1="16" x2="58" y2="84" stroke="#111" stroke-width="0.3" stroke-dasharray="1.6,1"/>
+    <rect x="15" y="84" width="20" height="35" fill="url(#holz3)" stroke="#111" stroke-width="0.6"/>
+    <text x="61" y="22" font-size="3.2" font-weight="bold">Unterzug</text>
+    <text x="61" y="26.5" font-size="3.0">GL24h 20/68</text>
+    <text x="61" y="31" font-size="2.8">(Trägerende)</text>
+    <!-- Winkel -->
+    <g fill="none" stroke="#b00020" stroke-width="0.7">
+      <path d="M35 84 L41 84 L41 78"/><path d="M15 84 L9 84 L9 78"/>
+    </g>
+    <line x1="42" y1="81" x2="59" y2="77.5" stroke="#b00020" stroke-width="0.3"/>
+    <text x="61" y="75" font-size="2.9" fill="#b00020">Stahlwinkel verzinkt</text>
+    <text x="61" y="79" font-size="2.9" fill="#b00020">bds. (Lagesicherung,</text>
+    <text x="61" y="83" font-size="2.9" fill="#b00020">Gabellagerung)</text>
+    <!-- Stuetzen-Label -->
+    <text x="40" y="97" font-size="3.2" font-weight="bold">Stütze 2</text>
+    <text x="40" y="101.5" font-size="3.0">KVH C24, 20/20</text>
+    <!-- Masse oben: Ueberstand 5 + Stuetze 20 -->
+    <g stroke="#111" stroke-width="0.3">
+      <line x1="10" y1="11.5" x2="10" y2="15"/><line x1="15" y1="11.5" x2="15" y2="15"/><line x1="35" y1="11.5" x2="35" y2="15"/>
+      <line x1="10" y1="13.5" x2="35" y2="13.5"/>
+      <line x1="9" y1="14.5" x2="11" y2="12.5"/><line x1="14" y1="14.5" x2="16" y2="12.5"/><line x1="34" y1="14.5" x2="36" y2="12.5"/>
+      <line x1="15" y1="15" x2="15" y2="83" stroke-dasharray="1,1" stroke-width="0.2"/>
+    </g>
+    <text x="10.6" y="12.6" font-size="2.9">5</text><text x="23" y="12.6" font-size="2.9">20</text>
+    <!-- Hoehe h=68 links -->
+    <g stroke="#111" stroke-width="0.3"><line x1="6.5" y1="16" x2="6.5" y2="84"/><line x1="8" y1="16" x2="5" y2="16"/><line x1="8" y1="84" x2="5" y2="84"/>
+    <line x1="5.5" y1="17" x2="7.5" y2="15"/><line x1="5.5" y1="85" x2="7.5" y2="83"/></g>
+    <text x="4.2" y="46" font-size="2.9" transform="rotate(90 4.2 46)">h = 68</text>
+    <!-- Hinweise -->
+    <text x="8" y="126" font-size="2.9">Überstand 5 cm (erf. ≥ 3 cm, Auflagerpressung);</text>
+    <text x="8" y="130" font-size="2.9">wirksame Auflagerfläche 20 × 20 cm</text>
+
+    <!-- ======== Detail B: Stuetze 1 auf Unterzug ======== -->
+    <text x="92" y="5" font-size="4.2" font-weight="bold">Detail B – M 1:10</text>
+    <text x="92" y="10" font-size="3.2">Fußpunkt Stütze 1 auf Unterzug</text>
+    <!-- Traeger segment: x 95..165, y 47..80 ; Stuetze x 124..136, y 14..47 -->
+    <rect x="95" y="47" width="70" height="33" fill="url(#holz2)" stroke="#111" stroke-width="0.6"/>
+    <line x1="95" y1="80" x2="165" y2="80" stroke="#fff" stroke-width="0.8"/>
+    <line x1="95" y1="80" x2="165" y2="80" stroke="#111" stroke-width="0.3" stroke-dasharray="1.6,1"/>
+    <line x1="95" y1="47" x2="95" y2="80" stroke="#fff" stroke-width="0.8"/>
+    <line x1="95" y1="47" x2="95" y2="80" stroke="#111" stroke-width="0.3" stroke-dasharray="1.6,1"/>
+    <line x1="165" y1="47" x2="165" y2="80" stroke="#fff" stroke-width="0.8"/>
+    <line x1="165" y1="47" x2="165" y2="80" stroke="#111" stroke-width="0.3" stroke-dasharray="1.6,1"/>
+    <rect x="124" y="18" width="12" height="29" fill="url(#holz3)" stroke="#111" stroke-width="0.6"/>
+    <text x="139" y="23" font-size="3.2" font-weight="bold">Stütze 1</text>
+    <text x="139" y="27.5" font-size="3.0">KVH C24, 12/12</text>
+    <text x="97" y="54" font-size="3.2" font-weight="bold">Unterzug GL24h 20/68</text>
+    <text x="97" y="58.5" font-size="2.9">(Feldmitte, oberer Teil)</text>
+    <g fill="none" stroke="#b00020" stroke-width="0.7">
+      <path d="M124 47 L118 47 L118 41"/><path d="M136 47 L142 47 L142 41"/>
+    </g>
+    <text x="144" y="34" font-size="2.9" fill="#b00020">Stahlwinkel</text>
+    <text x="144" y="38" font-size="2.9" fill="#b00020">verzinkt bds.</text>
+    <text x="144" y="42" font-size="2.9" fill="#b00020">(Lagesicherung)</text>
+    <g stroke="#111" stroke-width="0.3">
+      <line x1="124" y1="13.5" x2="124" y2="17"/><line x1="136" y1="13.5" x2="136" y2="17"/>
+      <line x1="124" y1="15.5" x2="136" y2="15.5"/>
+      <line x1="123" y1="16.5" x2="125" y2="14.5"/><line x1="135" y1="16.5" x2="137" y2="14.5"/>
+    </g>
+    <text x="128.5" y="14.6" font-size="2.9">12</text>
+    <text x="92" y="126" font-size="2.9">Lasteinleitung über Kontaktpressung (Querdruck):</text>
+    <text x="92" y="130" font-size="2.9">A<tspan font-size="2.2" dy="0.8">ef</tspan><tspan dy="-0.8"> = 18 × 12 cm, Ausnutzung η = 0,51</tspan></text>
+
+    <!-- ======== Querschnitte ======== -->
+    <text x="2" y="142" font-size="4.2" font-weight="bold">Querschnitte</text>
+
+    <!-- UZ 20/68, M 1:10 -->
+    <text x="10" y="149" font-size="3.3" font-weight="bold">Unterzug GL24h – M 1:10</text>
+    <rect x="14" y="153" width="20" height="68" fill="url(#holz2)" stroke="#111" stroke-width="0.6"/>
+    <g stroke="#111" stroke-width="0.3">
+      <line x1="14" y1="222" x2="14" y2="226"/><line x1="34" y1="222" x2="34" y2="226"/>
+      <line x1="14" y1="224" x2="34" y2="224"/>
+      <line x1="13" y1="225" x2="15" y2="223"/><line x1="33" y1="225" x2="35" y2="223"/>
+      <line x1="37" y1="153" x2="41" y2="153"/><line x1="37" y1="221" x2="41" y2="221"/>
+      <line x1="39" y1="153" x2="39" y2="221"/>
+      <line x1="38" y1="154" x2="40" y2="152"/><line x1="38" y1="222" x2="40" y2="220"/>
+    </g>
+    <text x="22.4" y="229" font-size="3.0">20</text>
+    <text x="42.5" y="188" font-size="3.0">68</text>
+
+    <!-- Stuetze 1 12/12, M 1:5 -->
+    <text x="64" y="149" font-size="3.3" font-weight="bold">Stütze 1 C24 – M 1:5</text>
+    <rect x="68" y="156" width="24" height="24" fill="url(#holz3)" stroke="#111" stroke-width="0.6"/>
+    <g stroke="#111" stroke-width="0.3">
+      <line x1="68" y1="182" x2="68" y2="186"/><line x1="92" y1="182" x2="92" y2="186"/>
+      <line x1="68" y1="184" x2="92" y2="184"/>
+      <line x1="67" y1="185" x2="69" y2="183"/><line x1="91" y1="185" x2="93" y2="183"/>
+      <line x1="94" y1="156" x2="98" y2="156"/><line x1="94" y1="180" x2="98" y2="180"/>
+      <line x1="96" y1="156" x2="96" y2="180"/>
+      <line x1="95" y1="157" x2="97" y2="155"/><line x1="95" y1="181" x2="97" y2="179"/>
+    </g>
+    <text x="78.4" y="189" font-size="3.0">12</text>
+    <text x="99.5" y="169.5" font-size="3.0">12</text>
+
+    <!-- Stuetze 2 20/20, M 1:5 -->
+    <text x="118" y="149" font-size="3.3" font-weight="bold">Stütze 2 C24 – M 1:5</text>
+    <rect x="122" y="156" width="40" height="40" fill="url(#holz3)" stroke="#111" stroke-width="0.6"/>
+    <g stroke="#111" stroke-width="0.3">
+      <line x1="122" y1="198" x2="122" y2="202"/><line x1="162" y1="198" x2="162" y2="202"/>
+      <line x1="122" y1="200" x2="162" y2="200"/>
+      <line x1="121" y1="201" x2="123" y2="199"/><line x1="161" y1="201" x2="163" y2="199"/>
+      <line x1="164" y1="156" x2="168" y2="156"/><line x1="164" y1="196" x2="168" y2="196"/>
+      <line x1="166" y1="156" x2="166" y2="196"/>
+      <line x1="165" y1="157" x2="167" y2="155"/><line x1="165" y1="197" x2="167" y2="195"/>
+    </g>
+    <text x="140.4" y="205" font-size="3.0">20</text>
+    <text x="168.6" y="177" font-size="3.0" text-anchor="start">20</text>
+    <!-- Fussnote -->
+    <text x="64" y="224" font-size="3.0">Maße der Querschnitte in cm;</text>
+    <text x="64" y="228.3" font-size="3.0">Holzfeuchte Einbau ≤ 15 ± 3 %; NKL 1.</text>
+  </svg>
+  </div>
+  <table class="plankopf">
+    <tr>
+      <td style="width:34mm"><span class="lbl">Tragwerksplaner</span><b>Semesteraufgabe B3</b><br>TH Nürnberg – Holzbau</td>
+      <td style="width:46mm"><span class="lbl">Bauvorhaben</span>Holzhaus – Unterzug mit Stützen</td>
+      <td style="width:40mm"><span class="lbl">Gegenstand</span>Details und Querschnitte</td>
+      <td style="width:18mm"><span class="lbl">Maßstab</span>1:10 / 1:5</td>
+      <td style="width:18mm"><span class="lbl">Datum</span>&nbsp;</td>
+      <td style="width:16mm"><span class="lbl">Blatt</span><b>2</b></td>
+    </tr>
+    <tr>
+      <td><span class="lbl">Bearbeitet</span>Felix ____________</td>
+      <td><span class="lbl">Bauherr</span>–</td>
+      <td><span class="lbl">Index / Änderung</span>–</td>
+      <td colspan="3"><span class="lbl">Projekt-Nr.</span>B3 – WS 2025/26</td>
+    </tr>
+  </table>
+</div>
+
+</body>
+</html>
